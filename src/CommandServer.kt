@@ -1,17 +1,32 @@
 package com.meghdut
 
 
-import io.ktor.http.cio.websocket.*
-import kotlinx.coroutines.channels.*
+import io.ktor.http.cio.websocket.CloseReason
+import io.ktor.http.cio.websocket.Frame
+import io.ktor.http.cio.websocket.WebSocketSession
+import io.ktor.http.cio.websocket.close
+import kotlinx.coroutines.channels.ClosedSendChannelException
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import java.util.*
-import java.util.concurrent.*
-import java.util.concurrent.atomic.*
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicInteger
 
 /**
  * Class in charge of the logic of the  server.
  * It contains handlers to events and commands to send messages to specific users in the server.
  */
 class CommandServer {
+
+    val okHttpClient by lazy {
+        OkHttpClient.Builder().build()
+    }
+
+    var clientCount = -1
+    var mainServerUrl = ""
+    var clientID = ""
+
     /**
      * Atomic counter used to get unique user-names based on the maxiumum users the server had.
      */
@@ -39,7 +54,11 @@ class CommandServer {
      * Handles that a member identified with a session id and a socket joined.
      */
     suspend fun memberJoin(member: String, socket: WebSocketSession) {
+        if (clientCount == -1) {
+            clientCount = 1
+        }
         // Checks if this user is already registered in the server and gives him/her a temporal name if required.
+
         val name = memberNames.computeIfAbsent(member) { "user${usersCounter.incrementAndGet()}" }
 
         // Associates this socket to the member id.
@@ -76,6 +95,7 @@ class CommandServer {
      * Handles that a [member] with a specific [socket] left the server.
      */
     suspend fun memberLeft(member: String, socket: WebSocketSession) {
+        clientCount--
         // Removes the socket connection for this member
         val connections = members[member]
         connections?.remove(socket)
@@ -85,6 +105,12 @@ class CommandServer {
         if (connections != null && connections.isEmpty()) {
             val name = memberNames.remove(member) ?: member
             broadcast("server", "Member left: $name.")
+        }
+        if (clientCount == 0 && mainServerUrl.isNotBlank()) {
+          val request=Request.Builder().url("$mainServerUrl/admin/intances/done?id=$clientID").get().build()
+            val execute = okHttpClient.newCall(request).execute()
+            println("com.meghdut>CommandServer>memberLeft   ${execute.body?.string()} ")
+            execute.close()
         }
     }
 

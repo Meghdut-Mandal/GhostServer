@@ -1,35 +1,75 @@
 package com.meghdut
-import io.ktor.application.*
+
+import com.meghdut.data.ChatClient
+import io.ktor.application.Application
+import io.ktor.application.ApplicationCallPipeline
+import io.ktor.application.call
+import io.ktor.application.install
 import io.ktor.features.*
 import io.ktor.gson.gson
-import io.ktor.html.respondHtml
-import io.ktor.http.*
+import io.ktor.http.HttpHeaders
+import io.ktor.http.HttpMethod
+import io.ktor.http.HttpStatusCode
 import io.ktor.http.cio.websocket.*
-import io.ktor.http.cio.websocket.CloseReason
-import io.ktor.http.cio.websocket.Frame
-import io.ktor.http.content.*
-import io.ktor.locations.*
+import io.ktor.http.content.defaultResource
+import io.ktor.http.content.resources
+import io.ktor.http.content.static
+import io.ktor.locations.Locations
+import io.ktor.request.receive
 import io.ktor.response.respond
 import io.ktor.response.respondRedirect
-import io.ktor.response.respondText
-import io.ktor.routing.*
+import io.ktor.routing.get
+import io.ktor.routing.post
+import io.ktor.routing.route
+import io.ktor.routing.routing
 import io.ktor.sessions.*
 import io.ktor.util.generateNonce
 import io.ktor.websocket.webSocket
-import kotlinx.coroutines.channels.*
-import kotlinx.css.a
-import java.time.*
-import java.util.*
+import kotlinx.coroutines.channels.consumeEach
+import java.io.File
+import java.time.Duration
 
 
 fun main(args: Array<String>): Unit = io.ktor.server.netty.EngineMain.main(args)
 private val server = CommandServer()
 
 data class UserSession(val id: String)
+data class MeetingResponce(
+    val isAvailable: Boolean,
+    val client: ChatClient?
+)
+
+object AutomationServer {
+    val clientList = arrayListOf<ChatClient>()
+
+    fun getInactiveClient(): ChatClient? {
+        return clientList.find { !it.status }
+    }
+
+    fun activate(id: String, status: Boolean) {
+        clientList.find { it.id == id }?.let {
+            it.status = status
+        }
+    }
+
+    fun add(chatClient: ChatClient) {
+        chatClient.status = false
+        clientList.add(chatClient)
+    }
+
+}
+
 
 @Suppress("unused") // Referenced in application.conf
 @kotlin.jvm.JvmOverloads
 fun Application.module(testing: Boolean = false) {
+
+    val configFile = File("config")
+    if (configFile.exists()) {
+        server.mainServerUrl = configFile.readText().trim()
+        println("com.meghdut>>module  Mainserver  url ${server.mainServerUrl}")
+    }
+
     install(Locations)
     install(CallLogging)
     install(DefaultHeaders)
@@ -68,11 +108,6 @@ fun Application.module(testing: Boolean = false) {
 
 
     routing {
-
-
-        get("/") {
-            call.respondRedirect("/static/index.html")
-        }
         // Static feature. Try to access `/static/ktor_logo.svg`
         static("/static") {
             resources("static")
@@ -91,8 +126,46 @@ fun Application.module(testing: Boolean = false) {
 
         }
 
+        route("admin") {
+
+            get("/instances/list") {
+                call.respond(AutomationServer.clientList)
+            }
+
+            get("/new_meeting") {
+                val newClient = AutomationServer.getInactiveClient()
+                newClient?.let {
+                    it.status = true
+                }
+                call.respond(MeetingResponce((newClient != null), newClient))
+            }
+
+            get("/intances/done") {
+                val id = call.request.queryParameters["id"]
+                AutomationServer.clientList.filter { it.id == id }.forEach {
+                    it.status = false
+                }
+                call.respond(HttpStatusCode.OK, "Done!")
+            }
+
+            post("/instances/add") {
+                val receive = call.receive<ChatClient>()
+                AutomationServer.add(receive)
+                call.respond(HttpStatusCode.OK, "Done")
+            }
+        }
 
 
+        route("client") {
+            get("/start") {
+                val id = call.request.queryParameters["id"]
+                server.clientID = id ?: return@get call.respond(HttpStatusCode.BadRequest, "ID not found")
+                call.respondRedirect("/static/index.html")
+            }
+        }
+
+        val port = System.getenv("PORT")
+        println("com.meghdut>>module  running at http://localhost:$port/ ")
 
         webSocket("/ws") { // this: WebSocketSession ->
 
@@ -175,3 +248,4 @@ private suspend fun receivedMessage(id: String, command: String) {
 
 class AuthenticationException : RuntimeException()
 class AuthorizationException : RuntimeException()
+// java -jar build/libs/ghost-0.0.1-all.jar

@@ -48,6 +48,11 @@ dependencies {
     implementation "io.ktor:ktor-client-core:$ktor_version"
     implementation "io.ktor:ktor-client-core-jvm:$ktor_version"
     testImplementation "io.ktor:ktor-server-tests:$ktor_version"
+// https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp
+    implementation group: 'com.squareup.okhttp3', name: 'okhttp', version: '4.7.2'
+
+    implementation group: 'org.dizitart', name: 'potassium-nitrite', version: '3.4.2'
+
 }
 mainClassName = 'io.ktor.server.netty.EngineMain' // Starting with 1.0.0-beta-3
 
