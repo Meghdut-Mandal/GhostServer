@@ -1,4 +1,5 @@
 sudo apt-get update
-sudo apt-get -y install openjdk-11-jdk
+sudo apt-get -y install  openjdk-11-jre-headless
+PORT=80
 sudo java -jar build/libs/ghost-0.0.1-all.jar
 
