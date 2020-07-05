@@ -79,6 +79,8 @@ fun Application.module(testing: Boolean = false) {
         method(HttpMethod.Put)
         method(HttpMethod.Delete)
         method(HttpMethod.Patch)
+        method(HttpMethod.Post)
+        method(HttpMethod.Get)
         header(HttpHeaders.Authorization)
         header("MyCustomHeader")
         allowCredentials = true
