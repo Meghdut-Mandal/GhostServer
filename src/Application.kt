@@ -87,8 +87,8 @@ fun Application.module(testing: Boolean = false) {
         header(HttpHeaders.AccessControlAllowOrigin)
         allowCredentials = true
         anyHost()
-        header("Set-Cookie")
-
+        maxAge = Duration.ofDays(1)
+        header("key")
     }
 
     // This installs the websockets feature to be able to establish a bidirectional configuration
