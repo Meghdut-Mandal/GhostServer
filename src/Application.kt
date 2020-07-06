@@ -161,6 +161,10 @@ fun Application.module(testing: Boolean = false) {
             }
         }
 
+        get("/"){
+            call.respondRedirect("/static/index2.html")
+        }
+
 
         route("client") {
             get("/start") {
