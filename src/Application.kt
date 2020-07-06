@@ -74,17 +74,7 @@ fun Application.module(testing: Boolean = false) {
     install(CallLogging)
     install(DefaultHeaders)
 
-    install(CORS) {
-        method(HttpMethod.Options)
-        header(HttpHeaders.XForwardedProto)
-        anyHost()
-        host("restro-b969a.firebaseapp.com")
-        // host("my-host:80")
-        // host("my-host", subDomains = listOf("www"))
-        // host("my-host", schemes = listOf("http", "https"))
-        allowCredentials = true
-        allowNonSimpleContentTypes = true
-    }
+    install(CORS)
 
     // This installs the websockets feature to be able to establish a bidirectional configuration
     // between the server and the client
