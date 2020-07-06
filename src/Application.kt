@@ -82,7 +82,6 @@ fun Application.module(testing: Boolean = false) {
         method(HttpMethod.Post)
         method(HttpMethod.Get)
         header(HttpHeaders.Authorization)
-        header("MyCustomHeader")
         allowCredentials = true
         anyHost()
     }
