@@ -75,13 +75,11 @@ fun Application.module(testing: Boolean = false) {
     install(DefaultHeaders)
 
     install(CORS) {
-        method(HttpMethod.Options)
-        method(HttpMethod.Put)
-        method(HttpMethod.Delete)
-        method(HttpMethod.Patch)
-        method(HttpMethod.Post)
-        method(HttpMethod.Get)
-        header(HttpHeaders.Authorization)
+        header("Access-Control-Allow-Origin: *");
+        header("Access-Control-Allow-Credentials: true");
+        header("Access-Control-Allow-Methods: GET, HEAD, OPTIONS, POST, PUT, DELETE");
+        header("Access-Control-Allow-Headers: Authorization, Origin, X-Requested-With, Content-Type, Accept");
+        header("Access-Control-Expose-Headers: Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
         allowCredentials = true
         anyHost()
     }
