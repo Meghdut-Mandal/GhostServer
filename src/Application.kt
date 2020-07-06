@@ -72,9 +72,24 @@ fun Application.module(testing: Boolean = false) {
 
     install(Locations)
     install(CallLogging)
-    install(DefaultHeaders)
+//    install(DefaultHeaders)
 
     install(CORS)
+    {
+        method(HttpMethod.Options)
+        method(HttpMethod.Get)
+        method(HttpMethod.Post)
+        method(HttpMethod.Put)
+        method(HttpMethod.Delete)
+        method(HttpMethod.Patch)
+        header(HttpHeaders.AccessControlAllowHeaders)
+        header(HttpHeaders.ContentType)
+        header(HttpHeaders.AccessControlAllowOrigin)
+        allowCredentials = true
+        anyHost()
+        header("Set-Cookie")
+
+    }
 
     // This installs the websockets feature to be able to establish a bidirectional configuration
     // between the server and the client
