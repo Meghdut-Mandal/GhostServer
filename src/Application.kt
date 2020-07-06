@@ -75,13 +75,15 @@ fun Application.module(testing: Boolean = false) {
     install(DefaultHeaders)
 
     install(CORS) {
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Credentials: true");
-        header("Access-Control-Allow-Methods: GET, HEAD, OPTIONS, POST, PUT, DELETE");
-        header("Access-Control-Allow-Headers: Authorization, Origin, X-Requested-With, Content-Type, Accept");
-        header("Access-Control-Expose-Headers: Access-Control-Allow-Headers, Origin, Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers");
-        allowCredentials = true
+        method(HttpMethod.Options)
+        header(HttpHeaders.XForwardedProto)
         anyHost()
+        host("restro-b969a.firebaseapp.com")
+        // host("my-host:80")
+        // host("my-host", subDomains = listOf("www"))
+        // host("my-host", schemes = listOf("http", "https"))
+        allowCredentials = true
+        allowNonSimpleContentTypes = true
     }
 
     // This installs the websockets feature to be able to establish a bidirectional configuration
